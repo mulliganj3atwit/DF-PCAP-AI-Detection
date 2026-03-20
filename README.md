@@ -2,8 +2,8 @@
 Digital Forensics Final Project
 
 
-## How to run
-# Give exacute permissions to createimager.sh
+# How to run
+## Give exacute permissions to createimager.sh
 sudo chmod +x createimager.sh
-# Run Script
+## Run Script
 ./createimager.sh
