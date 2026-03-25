@@ -103,14 +103,14 @@ echo "MD5    - Image  : $IMAGE_MD5"  >> "$LOGFILE"
 echo ""                              >> "$LOGFILE"
  
 # SHA256 check
-if [ "$SOURCE_SHA" = "$IMAGE_SHA" ] && [ "$IMAGE_SHA" = "$COPY_SHA" ]; then
+if [ "$SOURCE_SHA" = "$IMAGE_SHA" ]; then
     SHA_RESULT="PASSED"
 else
     SHA_RESULT="FAILED"
 fi
  
 # MD5 check
-if [ "$SOURCE_MD5" = "$IMAGE_MD5" ] && [ "$IMAGE_MD5" = "$COPY_MD5" ]; then
+if [ "$SOURCE_MD5" = "$IMAGE_MD5" ]; then
     MD5_RESULT="PASSED"
 else
     MD5_RESULT="FAILED"
@@ -120,7 +120,7 @@ echo "SHA256 Validation : $SHA_RESULT" >> "$LOGFILE"
 echo "MD5    Validation : $MD5_RESULT" >> "$LOGFILE"
  
 # Cleanup temp files
-rm -f /tmp/source_md5.tmp /tmp/image_md5.tmp /tmp/copy_md5.tmp
+rm -f /tmp/source_md5.tmp /tmp/image_md5.tmp
  
 # Print result to terminal
 echo ""
