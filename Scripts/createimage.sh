@@ -77,20 +77,17 @@ echo "Imaging complete: $IMGFILE"
 echo ""
  
 #Image Hashing 
-echo "Step 3: Hashing image file..."
+echo "Hashing image file..."
 IMG_SIZE=$(stat -c%s "$IMGFILE")
 echo "--- Original Image Hash ---" >> "$LOGFILE"
 IMAGE_SHA=$(pv -p -t -e -r -s "$IMG_SIZE" "$IMGFILE" | tee >(md5sum > /tmp/image_md5.tmp) | sha256sum | awk '{print $1}')
-echo "Step 1: Hashing source device (this may take a while)..."
-DEVICE_SIZE=$(lsblk -bdn -o SIZE "$DEVICE")
-echo "--- Source Device Hash ---" >> "$LOGFILE"
-SOURCE_SHA=$(sudo pv -p -t -e -r -s "$DEVICE_SIZE" "$DEVICE" | tee >(md5sum > /tmp/source_md5.tmp) | sha256sum | awk '{print $1}')
-SOURCE_MD5=$(awk '{print $1}' /tmp/source_md5.tmp)
-echo "$SOURCE_SHA  $DEVICE (sha256)" >> "$LOGFILE"
-echo "$SOURCE_MD5  $DEVICE (md5)"    >> "$LOGFILE"
+IMAGE_MD5=$(awk '{print $1}' /tmp/image_md5.tmp)
+echo "$IMAGE_SHA  $IMGFILE (sha256)" >> "$LOGFILE"
+echo "$IMAGE_MD5  $IMGFILE (md5)"    >> "$LOGFILE"
 echo ""                              >> "$LOGFILE"
-echo "Source hashing complete."
+echo "Image hashing complete."
 echo ""
+
 
 # ---- STEP 6: Validate all three hashes ----
 echo "Step 6: Validating hashes..."
@@ -128,59 +125,6 @@ echo "==============================="
 echo " SHA256 Validation : $SHA_RESULT"
 echo " MD5    Validation : $MD5_RESULT"
 echo "==============================="
-echo ""
- 
-if [ "$SHA_RESULT" = "PASSED" ] && [ "$MD5_RESULT" = "PASSED" ]; then
-    echo "All hashes match. Forensic integrity confirmed." | tee -a "$LOGFILE"
-else
-    echo "WARNING: Hash mismatch detected. Image may not be forensically sound." | tee -a "$LOGFILE"
-fi
- 
-echo ""
-echo "Log saved to: $LOGFILE"
-echo "Done."IMAGE_MD5=$(awk '{print $1}' /tmp/image_md5.tmp)
-echo "$IMAGE_SHA  $IMGFILE (sha256)" >> "$LOGFILE"
-echo "$IMAGE_MD5  $IMGFILE (md5)"    >> "$LOGFILE"
-echo ""                              >> "$LOGFILE"
-echo "Image hashing complete."
-echo ""
- 
-
-
- 
-
-echo "--- Validation Summary ---"    >> "$LOGFILE"
-echo "SHA256 - Source : $SOURCE_SHA" >> "$LOGFILE"
-echo "SHA256 - Image  : $IMAGE_SHA"  >> "$LOGFILE"
-echo ""                              >> "$LOGFILE"
-echo "MD5    - Source : $SOURCE_MD5" >> "$LOGFILE"
-echo "MD5    - Image  : $IMAGE_MD5"  >> "$LOGFILE"
-echo ""                              >> "$LOGFILE"
- 
-
-if [ "$SOURCE_SHA" = "$IMAGE_SHA" ]; then
-    SHA_RESULT="PASSED"
-else
-    SHA_RESULT="FAILED"
-fi
- 
-
-if [ "$SOURCE_MD5" = "$IMAGE_MD5" ]; then
-    MD5_RESULT="PASSED"
-else
-    MD5_RESULT="FAILED"
-fi
- 
-echo "SHA256 Validation : $SHA_RESULT" >> "$LOGFILE"
-echo "MD5    Validation : $MD5_RESULT" >> "$LOGFILE"
- 
-
-rm -f /tmp/source_md5.tmp /tmp/image_md5.tmp
- 
-
-echo ""
-echo " SHA256 Validation : $SHA_RESULT"
-echo " MD5    Validation : $MD5_RESULT"
 echo ""
  
 if [ "$SHA_RESULT" = "PASSED" ] && [ "$MD5_RESULT" = "PASSED" ]; then
