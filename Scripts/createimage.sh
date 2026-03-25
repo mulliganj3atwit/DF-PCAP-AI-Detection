@@ -3,11 +3,6 @@
 DEFAULT_IMG_DIR="$HOME/images"
 DEFAULT_LOG_DIR="$HOME/logs"
 
-if ! command -v pv &> /dev/null; then
-    echo "Installing pv..."
-    sudo apt install -y pv
-fi
-
 echo "Avalible disks"
 
 lsblk -d -o NAME,SIZE,MODEL,TRAN
