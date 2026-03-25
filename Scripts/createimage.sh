@@ -54,6 +54,8 @@ LOGFILE="$LOG_DIR/${DISK}_$TIMESTAMP.txt"
 
 
 #Source Hashing 
+
+echo "Hashing source device..."
 echo "--- Source Device Hash ---" >> "$LOGFILE"
 SOURCE_SHA=$(sudo sha256sum "$DEVICE" | awk '{print $1}')
 SOURCE_MD5=$(sudo md5sum "$DEVICE" | awk '{print $1}')
@@ -64,9 +66,7 @@ echo "Source hashing complete."
  
 #Imaging 
 sudo dd if="$DEVICE" of="$IMGFILE" bs=4M status=progress conv=noerror,sync
-echo ""
 echo "Imaging complete: $IMGFILE"
-echo ""
  
 #Image Hashing 
 echo "Hashing image file..."
@@ -77,11 +77,9 @@ echo "$IMAGE_SHA  $IMGFILE (sha256)" >> "$LOGFILE"
 echo "$IMAGE_MD5  $IMGFILE (md5)"    >> "$LOGFILE"
 echo ""                              >> "$LOGFILE"
 echo "Image hashing complete."
-echo ""
 
 
-# ---- STEP 6: Validate all three hashes ----
-echo "Step 6: Validating hashes..."
+
 echo "--- Validation Summary ---"    >> "$LOGFILE"
 echo "SHA256 - Source : $SOURCE_SHA" >> "$LOGFILE"
 echo "SHA256 - Image  : $IMAGE_SHA"  >> "$LOGFILE"
