@@ -58,17 +58,14 @@ IMGFILE="$IMG_DIR/${DISK}_$TIMESTAMP.img"
 LOGFILE="$LOG_DIR/${DISK}_$TIMESTAMP.txt"
 
 
-DEVICE_SIZE=$(lsblk -bdn -o SIZE "$DEVICE")
-
 #Source Hashing 
 echo "--- Source Device Hash ---" >> "$LOGFILE"
-SOURCE_SHA=$(sudo pv -p -t -e -r -s "$DEVICE_SIZE" "$DEVICE" | tee >(md5sum > /tmp/source_md5.tmp) | sha256sum | awk '{print $1}')
-SOURCE_MD5=$(awk '{print $1}' /tmp/source_md5.tmp)
+SOURCE_SHA=$(sudo sha256sum "$DEVICE" | awk '{print $1}')
+SOURCE_MD5=$(sudo md5sum "$DEVICE" | awk '{print $1}')
 echo "$SOURCE_SHA  $DEVICE (sha256)" >> "$LOGFILE"
 echo "$SOURCE_MD5  $DEVICE (md5)"    >> "$LOGFILE"
 echo ""                              >> "$LOGFILE"
 echo "Source hashing complete."
-echo ""
  
 #Imaging 
 sudo dd if="$DEVICE" of="$IMGFILE" bs=4M status=progress conv=noerror,sync
@@ -78,10 +75,9 @@ echo ""
  
 #Image Hashing 
 echo "Hashing image file..."
-IMG_SIZE=$(stat -c%s "$IMGFILE")
 echo "--- Original Image Hash ---" >> "$LOGFILE"
-IMAGE_SHA=$(pv -p -t -e -r -s "$IMG_SIZE" "$IMGFILE" | tee >(md5sum > /tmp/image_md5.tmp) | sha256sum | awk '{print $1}')
-IMAGE_MD5=$(awk '{print $1}' /tmp/image_md5.tmp)
+IMAGE_SHA=$(sudo md5sum "$IMGFILE" | awk '{print $1}')
+IMAGE_MD5=$(sudo md5sum "$IMGFILE" | awk '{print $1}')
 echo "$IMAGE_SHA  $IMGFILE (sha256)" >> "$LOGFILE"
 echo "$IMAGE_MD5  $IMGFILE (md5)"    >> "$LOGFILE"
 echo ""                              >> "$LOGFILE"
@@ -116,8 +112,6 @@ fi
 echo "SHA256 Validation : $SHA_RESULT" >> "$LOGFILE"
 echo "MD5    Validation : $MD5_RESULT" >> "$LOGFILE"
  
-# Cleanup temp files
-rm -f /tmp/source_md5.tmp /tmp/image_md5.tmp
  
 # Print result to terminal
 echo ""
