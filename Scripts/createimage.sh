@@ -71,7 +71,7 @@ echo "Imaging complete: $IMGFILE"
 #Image Hashing 
 echo "Hashing image file..."
 echo "--- Original Image Hash ---" >> "$LOGFILE"
-IMAGE_SHA=$(sudo md5sum "$IMGFILE" | awk '{print $1}')
+IMAGE_SHA=$(sudo sha256sum "$IMGFILE" | awk '{print $1}')
 IMAGE_MD5=$(sudo md5sum "$IMGFILE" | awk '{print $1}')
 echo "$IMAGE_SHA  $IMGFILE (sha256)" >> "$LOGFILE"
 echo "$IMAGE_MD5  $IMGFILE (md5)"    >> "$LOGFILE"
