@@ -55,11 +55,12 @@ mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +%F_%H-%M-%S)
 
 IMGFILE="$IMG_DIR/${DISK}_$TIMESTAMP.img"
-COPYFILE="$IMG_DIR/${DISK}_$TIMESTAMP.copy.img"
 LOGFILE="$LOG_DIR/${DISK}_$TIMESTAMP.txt"
 
 
 DEVICE_SIZE=$(lsblk -bdn -o SIZE "$DEVICE")
+
+#Source Hashing 
 echo "--- Source Device Hash ---" >> "$LOGFILE"
 SOURCE_SHA=$(sudo pv -p -t -e -r -s "$DEVICE_SIZE" "$DEVICE" | tee >(md5sum > /tmp/source_md5.tmp) | sha256sum | awk '{print $1}')
 SOURCE_MD5=$(awk '{print $1}' /tmp/source_md5.tmp)
@@ -69,13 +70,14 @@ echo ""                              >> "$LOGFILE"
 echo "Source hashing complete."
 echo ""
  
-
+#Imaging 
 sudo dd if="$DEVICE" of="$IMGFILE" bs=4M status=progress conv=noerror,sync
 echo ""
 echo "Imaging complete: $IMGFILE"
 echo ""
  
-
+#Image Hashing 
+echo "Step 3: Hashing image file..."
 IMG_SIZE=$(stat -c%s "$IMGFILE")
 echo "--- Original Image Hash ---" >> "$LOGFILE"
 IMAGE_SHA=$(pv -p -t -e -r -s "$IMG_SIZE" "$IMGFILE" | tee >(md5sum > /tmp/image_md5.tmp) | sha256sum | awk '{print $1}')
@@ -89,54 +91,15 @@ echo "$SOURCE_MD5  $DEVICE (md5)"    >> "$LOGFILE"
 echo ""                              >> "$LOGFILE"
 echo "Source hashing complete."
 echo ""
- 
-# ---- STEP 2: Image the device ----
-echo "Step 2: Imaging device..."
-sudo dd if="$DEVICE" of="$IMGFILE" bs=4M status=progress conv=noerror,sync
-echo ""
-echo "Imaging complete: $IMGFILE"
-echo ""
- 
-# ---- STEP 3: Hash the image ----
-echo "Step 3: Hashing image file..."
-IMG_SIZE=$(stat -c%s "$IMGFILE")
-echo "--- Original Image Hash ---" >> "$LOGFILE"
-IMAGE_SHA=$(pv -p -t -e -r -s "$IMG_SIZE" "$IMGFILE" | tee >(md5sum > /tmp/image_md5.tmp) | sha256sum | awk '{print $1}')
-IMAGE_MD5=$(awk '{print $1}' /tmp/image_md5.tmp)
-echo "$IMAGE_SHA  $IMGFILE (sha256)" >> "$LOGFILE"
-echo "$IMAGE_MD5  $IMGFILE (md5)"    >> "$LOGFILE"
-echo ""                              >> "$LOGFILE"
-echo "Image hashing complete."
-echo ""
- 
-# ---- STEP 4: Copy the image ----
-echo "Step 4: Creating copy of image..."
-cp "$IMGFILE" "$COPYFILE"
-echo "Copy complete: $COPYFILE"
-echo ""
- 
-# ---- STEP 5: Hash the copy ----
-echo "Step 5: Hashing copy..."
-COPY_SIZE=$(stat -c%s "$COPYFILE")
-echo "--- Copy Image Hash ---" >> "$LOGFILE"
-COPY_SHA=$(pv -p -t -e -r -s "$COPY_SIZE" "$COPYFILE" | tee >(md5sum > /tmp/copy_md5.tmp) | sha256sum | awk '{print $1}')
-COPY_MD5=$(awk '{print $1}' /tmp/copy_md5.tmp)
-echo "$COPY_SHA  $COPYFILE (sha256)" >> "$LOGFILE"
-echo "$COPY_MD5  $COPYFILE (md5)"    >> "$LOGFILE"
-echo ""                              >> "$LOGFILE"
-echo "Copy hashing complete."
-echo ""
- 
+
 # ---- STEP 6: Validate all three hashes ----
 echo "Step 6: Validating hashes..."
 echo "--- Validation Summary ---"    >> "$LOGFILE"
 echo "SHA256 - Source : $SOURCE_SHA" >> "$LOGFILE"
 echo "SHA256 - Image  : $IMAGE_SHA"  >> "$LOGFILE"
-echo "SHA256 - Copy   : $COPY_SHA"   >> "$LOGFILE"
 echo ""                              >> "$LOGFILE"
 echo "MD5    - Source : $SOURCE_MD5" >> "$LOGFILE"
 echo "MD5    - Image  : $IMAGE_MD5"  >> "$LOGFILE"
-echo "MD5    - Copy   : $COPY_MD5"   >> "$LOGFILE"
 echo ""                              >> "$LOGFILE"
  
 # SHA256 check
@@ -183,41 +146,26 @@ echo "Image hashing complete."
 echo ""
  
 
-cp "$IMGFILE" "$COPYFILE"
-echo "Copy complete: $COPYFILE"
-echo ""
- 
 
-COPY_SIZE=$(stat -c%s "$COPYFILE")
-echo "--- Copy Image Hash ---" >> "$LOGFILE"
-COPY_SHA=$(pv -p -t -e -r -s "$COPY_SIZE" "$COPYFILE" | tee >(md5sum > /tmp/copy_md5.tmp) | sha256sum | awk '{print $1}')
-COPY_MD5=$(awk '{print $1}' /tmp/copy_md5.tmp)
-echo "$COPY_SHA  $COPYFILE (sha256)" >> "$LOGFILE"
-echo "$COPY_MD5  $COPYFILE (md5)"    >> "$LOGFILE"
-echo ""                              >> "$LOGFILE"
-echo "Copy hashing complete."
-echo ""
  
 
 echo "--- Validation Summary ---"    >> "$LOGFILE"
 echo "SHA256 - Source : $SOURCE_SHA" >> "$LOGFILE"
 echo "SHA256 - Image  : $IMAGE_SHA"  >> "$LOGFILE"
-echo "SHA256 - Copy   : $COPY_SHA"   >> "$LOGFILE"
 echo ""                              >> "$LOGFILE"
 echo "MD5    - Source : $SOURCE_MD5" >> "$LOGFILE"
 echo "MD5    - Image  : $IMAGE_MD5"  >> "$LOGFILE"
-echo "MD5    - Copy   : $COPY_MD5"   >> "$LOGFILE"
 echo ""                              >> "$LOGFILE"
  
 
-if [ "$SOURCE_SHA" = "$IMAGE_SHA" ] && [ "$IMAGE_SHA" = "$COPY_SHA" ]; then
+if [ "$SOURCE_SHA" = "$IMAGE_SHA" ]; then
     SHA_RESULT="PASSED"
 else
     SHA_RESULT="FAILED"
 fi
  
 
-if [ "$SOURCE_MD5" = "$IMAGE_MD5" ] && [ "$IMAGE_MD5" = "$COPY_MD5" ]; then
+if [ "$SOURCE_MD5" = "$IMAGE_MD5" ]; then
     MD5_RESULT="PASSED"
 else
     MD5_RESULT="FAILED"
@@ -227,7 +175,7 @@ echo "SHA256 Validation : $SHA_RESULT" >> "$LOGFILE"
 echo "MD5    Validation : $MD5_RESULT" >> "$LOGFILE"
  
 
-rm -f /tmp/source_md5.tmp /tmp/image_md5.tmp /tmp/copy_md5.tmp
+rm -f /tmp/source_md5.tmp /tmp/image_md5.tmp
  
 
 echo ""
