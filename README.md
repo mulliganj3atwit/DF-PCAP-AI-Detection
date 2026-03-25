@@ -7,3 +7,5 @@ Digital Forensics Final Project
 sudo chmod +x createimager.sh
 ## Run Script
 ./createimager.sh
+## Testing image
+Our test forensic image can be found here "Forensic Image Test Image": https://cfreds.nist.gov
