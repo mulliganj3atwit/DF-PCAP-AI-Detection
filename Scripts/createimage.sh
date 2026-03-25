@@ -46,13 +46,13 @@ fi
 mkdir -p "$IMG_DIR"
 mkdir -p "$LOG_DIR"
 
-
 TIMESTAMP=$(date -u +%F_%H-%M-%S)
-echo "Acquisition Time (UTC): $(date -u)" >> "$LOGFILE"
-echo "" >> "$LOGFILE"
+
 IMGFILE="$IMG_DIR/${DISK}_$TIMESTAMP.img"
 LOGFILE="$LOG_DIR/${DISK}_$TIMESTAMP.txt"
 
+echo "Acquisition Time (UTC): $(date -u)" >> "$LOGFILE"
+echo "" >> "$LOGFILE"
 
 #Source Hashing 
 
